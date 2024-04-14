@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "defaultSchema": "couch_test1",
+  "schemas": [
+    {
+      "type": "custom",
+      "name": "couch_test1",
+      "factory": "org.apache.calcite.adapter.mongodb.MongoSchemaFactory",
+      "operand": {
+        "host": "mongodb+srv://2019102224:!password1@cluster0.ez3b6en.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+        "username": "2019102224",
+        "password": "!password1",
+        "database": "my_sample"
+      }
+    }
+  ]
+}
