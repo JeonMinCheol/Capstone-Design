@@ -17,7 +17,6 @@
 
 package org.apache.calcite.adapter.couchdb;
 
-import org.apache.calcite.DataContext;
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.linq4j.*;
 import org.apache.calcite.plan.RelOptCluster;
@@ -25,10 +24,8 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.schema.ScannableTable;
 
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.impl.AbstractTableQueryable;
 
@@ -38,14 +35,11 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.Page;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -85,7 +79,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     final RelOptCluster cluster = context.getCluster();
-    return new CouchTableScan(cluster, cluster.traitSet(), relOptTable);
+    return new CouchTableScan(cluster, cluster.traitSet(), relOptTable, this, null);
   }
 
   // table(document)내의 row를 가져옴

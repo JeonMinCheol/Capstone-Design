@@ -17,5 +17,47 @@
 
 package org.apache.calcite.adapter.couchdb;
 
-public class CouchToEnumerableConverter {
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.plan.*;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterImpl;
+
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.List;
+
+public class CouchToEnumerableConverter extends ConverterImpl implements EnumerableRel {
+  /**
+   * Creates a ConverterImpl.
+   *
+   * @param cluster  planner's cluster
+   * @param traitDef the RelTraitDef this converter converts
+   * @param traits   the output traits of this converter
+   * @param child    child rel (provides input traits)
+   */
+  protected CouchToEnumerableConverter(
+      RelOptCluster cluster,
+      @Nullable RelTraitDef traitDef,
+      RelTraitSet traits,
+      RelNode child) {
+    super(cluster, ConventionTraitDef.INSTANCE, traits, child);
+  }
+
+  @Override
+  public @Nullable RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+    return super.computeSelfCost(planner, mq).multiplyBy(.1);
+  }
+
+  @Override
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+    return new CouchToEnumerableConverter(getCluster(), null, traitSet, sole(inputs));
+  }
+
+  @Override
+  public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+    return null;
+  }
 }
