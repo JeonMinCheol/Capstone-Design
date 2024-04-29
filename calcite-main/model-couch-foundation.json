@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "defaultSchema": "COUCH",
+  "schemas": [
+    {
+      "type": "custom",
+      "name" : "test",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "wiki"
+      }
+    }
+  ]
+}

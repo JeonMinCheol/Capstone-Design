@@ -71,6 +71,7 @@ include(
     "cassandra",
     "core",
     "couchdb",
+    "couchdbOriginLink",
     "druid",
     "elasticsearch",
     "example:csv",
