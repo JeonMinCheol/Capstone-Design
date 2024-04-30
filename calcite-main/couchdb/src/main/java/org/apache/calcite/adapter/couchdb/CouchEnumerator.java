@@ -17,8 +17,12 @@
 
 package org.apache.calcite.adapter.couchdb;
 
+import org.apache.calcite.avatica.util.DateTimeUtils;
 import org.apache.calcite.linq4j.Enumerator;
 
+
+import org.apache.calcite.linq4j.function.Function1;
+import org.apache.calcite.linq4j.tree.Primitive;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -28,7 +32,9 @@ import org.apache.http.util.EntityUtils;
 import org.lightcouch.CouchDbClient;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class CouchEnumerator implements Enumerator {
   private final List<Object> rows;
@@ -65,4 +71,5 @@ public class CouchEnumerator implements Enumerator {
   @Override
   public void close() {
   }
+
 }

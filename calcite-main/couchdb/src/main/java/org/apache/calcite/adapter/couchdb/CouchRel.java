@@ -19,9 +19,16 @@ package org.apache.calcite.adapter.couchdb;
 
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.runtime.PairList;
+import org.apache.calcite.util.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public interface CouchRel extends RelNode {
   void implement(Implementor implementor);
@@ -29,7 +36,9 @@ public interface CouchRel extends RelNode {
   Convention CONVENTION = new Convention.Impl("COUCH", CouchRel.class);
 
   class Implementor {
-    final PairList<String, String> list = PairList.of();
+    final List<String> list = new ArrayList<>();
+    final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
+    int skip = 0;
     final RexBuilder rexBuilder;
     RelOptTable table;
     CouchTable couchTable;
@@ -38,7 +47,12 @@ public interface CouchRel extends RelNode {
       this.rexBuilder = rexBuilder;
     }
 
-    public void add(String findOp, String aggOp) {list.add(findOp, aggOp);}
+    void addSort(String field, RelFieldCollation.Direction direction) {
+      Objects.requireNonNull(field, "field");
+      sort.add(new Pair<>(field, direction));
+    }
+
+    public void add(String findOp) {list.add(findOp);}
 
     public void visitChild(int ordinal, RelNode input) {
       assert ordinal == 0;

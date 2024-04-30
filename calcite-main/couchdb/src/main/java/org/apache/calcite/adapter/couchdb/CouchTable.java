@@ -17,10 +17,13 @@
 
 package org.apache.calcite.adapter.couchdb;
 
+import com.google.gson.JsonArray;
+
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.linq4j.*;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -32,28 +35,30 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.lightcouch.CouchDbClient;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 public class CouchTable extends AbstractQueryableTable implements TranslatableTable {
-  private final String documentId;
+  private final String dbName;
   private final JSONParser jsonParser;
-  CouchTable(String documentId, JSONParser jsonParser){
+  CouchTable(String dbName, JSONParser jsonParser){
       super(Object[].class);
-      this.documentId = documentId;
+      this.dbName = dbName;
       this.jsonParser = jsonParser;
   }
 
   @Override
-  public String toString() {return "CouchTable {" + documentId + '}';}
+  public String toString() {return "CouchTable {" + dbName + '}';}
 
   @Override
   public <T> Queryable<T> asQueryable(QueryProvider queryProvider, SchemaPlus schema, String tableName) {
@@ -61,7 +66,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
   }
 
   // table의 attribute 설정
-  // MAP이라는 attirbute 하나만 생성해서 때려박음
+  // MAP이라는 attirbute 하나만 생성
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     final RelDataType mapType =
@@ -72,54 +77,52 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
             )
         );
 
-    return typeFactory.builder().add(documentId, mapType).build();
+    return typeFactory.builder().add(dbName, mapType).build();
   }
 
-  // TODO
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     final RelOptCluster cluster = context.getCluster();
     return new CouchTableScan(cluster, cluster.traitSet(), relOptTable, this, null);
   }
 
-  // table(document)내의 row를 가져옴
-  private Enumerable<Object> find(CouchDbClient dbClient, String documentId) {
-    String tableUri = dbClient.getDBUri()+ "/" + documentId;
+  // filter
+  // field
+  // table(db)내의 row(docs)를 가져와 Enumerator를 반환
+  private Enumerable<Object> find(CouchDbClient dbClient, List<Map.Entry<String, Class>> fields,
+      List<String> ops,
+      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+      Long skip) {
+    String tableUri = dbClient.getDBUri().toString()+"/_find";
+
+    // TODO : query로 변환하는 코드
 
     // document 불러오는 코드
-    HttpGet docs = new HttpGet(tableUri);
-    HttpEntity entity = dbClient.executeRequest(docs).getEntity();
-    List<Object> list = new ArrayList<>();
-
     try{
-      String res  = EntityUtils.toString(entity,"UTF-8");
-      JSONObject rows = (JSONObject) jsonParser.parse(res);
+      String query = null;
 
-      int row = 0;
+      HttpPost req = new HttpPost(tableUri);
+      HttpEntity body = new StringEntity(query);
+      req.setEntity(body);
 
-      while(true) {
-        try{
-          Object o = rows.get(String.valueOf(row));
-          list.add(o);
+      HttpEntity res = dbClient.executeRequest(req).getEntity();
 
-          row++;
-        } catch (Exception e) {
-          break;
+      String finds  = EntityUtils.toString(res,"UTF-8");
+      JsonArray docs = (JsonArray) ((JSONObject) jsonParser.parse(finds)).get("docs");
+
+      return new AbstractEnumerable<Object>() {
+        @Override
+        public Enumerator<Object> enumerator() {
+          return new CouchEnumerator(Collections.singletonList(docs));
         }
-      }
-    }catch (Exception e){
-      throw new RuntimeException(e);
-    }
+      };
 
-    return new AbstractEnumerable<Object>() {
-      @Override
-      public Enumerator<Object> enumerator() {
-        return new CouchEnumerator(list);
-      }
-    };
+    } catch (IOException | ParseException e) {
+        throw new RuntimeException(e);
+    }
   }
 
-  private class CouchQueryable<T> extends AbstractTableQueryable<T> {
+  public class CouchQueryable<T> extends AbstractTableQueryable<T> {
     public CouchQueryable(QueryProvider queryProvider, SchemaPlus schema, CouchTable couchTable,
         String tableName) {
       super(queryProvider, schema, couchTable, tableName);
@@ -129,7 +132,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     @Override
     public Enumerator<T> enumerator() {
       final Enumerable<T> enumerable =
-          (Enumerable<T>) getTable().find(getClient(), tableName);
+          (Enumerable<T>) getTable().find(getClient(),null, null, null, null);
 
       return enumerable.enumerator();
     }
@@ -142,6 +145,13 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     // CouchDBClient 반환
     private CouchDbClient getClient() {
       return Objects.requireNonNull(schema.unwrap(CouchSchema.class)).dbClient;
+    }
+
+    public Enumerable<Object> find(List<Map.Entry<String, Class>> fields,
+        List<String> ops,
+        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+        Long skip) {
+      return getTable().find(getClient(), fields, ops, sort, skip);
     }
   }
 }

@@ -79,24 +79,8 @@ public class CouchSchema extends AbstractSchema {
   @Override
   protected Map<String, Table> getTableMap() {
     final ImmutableMap.Builder<String, Table> builder = ImmutableMap.builder();
-
-    // Database에 위치한 docs들 정보를 가져옴
-    HttpGet uri = new HttpGet(dbClient.getDBUri()+"/_all_docs");
-    CloseableHttpResponse response = (CloseableHttpResponse) dbClient.executeRequest(uri);
-    try {
-      String json = EntityUtils.toString(response.getEntity(), "UTF-8");
-      JSONArray rows = (JSONArray)((JSONObject) jsonParser.parse(json)).get("rows");
-
-      for (int i = 0; i < rows.size(); i++) {
-        JSONObject parse = (JSONObject) rows.get(i);
-        String documentId = (String) parse.get("id");
-
-        builder.put(documentId, new CouchTable(documentId, jsonParser));
-      }
-    } catch (IOException | ParseException e) {
-        throw new RuntimeException(e);
-    }
-
+    String dbName = properties.getDbName();
+    builder.put(dbName, new CouchTable(dbName, jsonParser));
     return builder.build();
   }
 }
