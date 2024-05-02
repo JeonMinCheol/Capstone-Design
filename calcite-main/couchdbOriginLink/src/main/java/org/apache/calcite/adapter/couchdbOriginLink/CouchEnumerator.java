@@ -24,6 +24,7 @@ import java.util.List;
 public class CouchEnumerator implements Enumerator<Object[]> {
   private final List<Object> rows;
   private Object[] current;
+  private int index = 0;
 
   public CouchEnumerator(List<Object> rows) {
     this.rows = rows;
@@ -37,13 +38,16 @@ public class CouchEnumerator implements Enumerator<Object[]> {
   @Override
   public boolean moveNext() {
     current = null;
+    Object[] o = new Object[1];
 
-    if (!rows.isEmpty()) {
-      current = rows.toArray();
-      return true;
+    if(index < rows.size()) {
+      o[0] = rows.get(index);
+      current = o;
+      index++;
     } else {
       return false;
     }
+    return true;
   }
 
   @Override

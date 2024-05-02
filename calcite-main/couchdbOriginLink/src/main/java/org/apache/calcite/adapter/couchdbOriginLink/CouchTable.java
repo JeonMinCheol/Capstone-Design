@@ -85,7 +85,7 @@ public class CouchTable extends AbstractTable implements ScannableTable {
     // document 불러오는 코드
     HttpGet docs = new HttpGet(tableUri);
     HttpEntity entity = schema.getDbClient().executeRequest(docs).getEntity();
-    List<Object> list = new ArrayList<>();
+    List<Object> values = new ArrayList<>();
 
     try {
       String res = EntityUtils.toString(entity, "UTF-8");
@@ -96,7 +96,11 @@ public class CouchTable extends AbstractTable implements ScannableTable {
 
 
       try {
-        list = Arrays.asList(map.values().toArray());
+        values = Arrays.asList(map.entrySet().toArray());
+        for (Object o : values) {
+          list.add(o);
+        }
+        System.out.println(list);
         } catch (Exception e) {
         throw new RuntimeException();
       }
