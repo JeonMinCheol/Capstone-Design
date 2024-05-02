@@ -91,13 +91,12 @@ public class CouchTable extends AbstractTable implements ScannableTable {
       String res = EntityUtils.toString(entity, "UTF-8");
       JSONObject rows = (JSONObject) jsonParser.parse(res);
 
-      int row = 0;
       Map<String, String> map = new ObjectMapper().readValue(rows.toJSONString(), Map.class);
 
 
       try {
-        values = Arrays.asList(map.entrySet().toArray());
-        for (Object o : values) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+          Object o = entry;
           list.add(o);
         }
         System.out.println(list);
