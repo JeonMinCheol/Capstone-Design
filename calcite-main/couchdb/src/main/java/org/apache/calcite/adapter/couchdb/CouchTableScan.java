@@ -44,6 +44,7 @@ public class CouchTableScan extends TableScan implements CouchRel{
     assert getConvention() == CouchRel.CONVENTION;
   }
 
+  // Relational Expression (RelNode)를 반환
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     assert inputs.isEmpty();
@@ -64,6 +65,7 @@ public class CouchTableScan extends TableScan implements CouchRel{
     return super.computeSelfCost(planner, mq).multiplyBy(.1 * f);
   }
 
+  // Optimization에 사용할 Rule 등록
   @Override
   public void register(RelOptPlanner planner) {
     planner.addRule(CouchToEnumerableConverterRule.INSTANCE);

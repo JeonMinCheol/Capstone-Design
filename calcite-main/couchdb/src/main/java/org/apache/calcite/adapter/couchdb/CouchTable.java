@@ -65,8 +65,11 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     return new CouchQueryable<>(queryProvider, schema, this, tableName);
   }
 
-  // table의 attribute 설정
-  // MAP이라는 attirbute 하나만 생성
+  /**
+   * table의 attribute를 생성
+   *
+   * 출력 예시: select _MAP['attribute'] from dbName;
+   */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     final RelDataType mapType =
@@ -77,27 +80,35 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
             )
         );
 
-    return typeFactory.builder().add(dbName, mapType).build();
+    return typeFactory.builder().add("_MAP", mapType).build();
   }
 
+  // 현재 테이블을 RelNode로 변환
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     final RelOptCluster cluster = context.getCluster();
     return new CouchTableScan(cluster, cluster.traitSet(), relOptTable, this, null);
   }
 
-  // filter
-  // field
-  // table(db)내의 row(docs)를 가져와 Enumerator를 반환
+  /**
+   * Executes a "find" operation
+   *
+   * @param fields 프로젝션할 목록; or null to return map
+   * @param ops 실행할 operation 목록.
+   * @param sort list of fields to sort and their direction (asc/desc)
+   * @param skip 몇 번쨰 docs까지 skip하고 이후 결과를 출력할 지 결정
+   * @return Enumerator of results
+   */
   private Enumerable<Object> find(CouchDbClient dbClient, List<Map.Entry<String, Class>> fields,
       List<String> ops,
       List<Map.Entry<String, RelFieldCollation.Direction>> sort,
       Long skip) {
+
     String tableUri = dbClient.getDBUri().toString()+"/_find";
 
-    // TODO : query로 변환하는 코드
+    // TODO : fields, ops, sort, skip등 query에 사용할 parameter를 받아와 query로 변환하는 코드
 
-    // document 불러오는 코드
+    // 생성된 query로 document 조회, Enumerator로 변환
     try{
       String query = null;
 
@@ -147,6 +158,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       return Objects.requireNonNull(schema.unwrap(CouchSchema.class)).dbClient;
     }
 
+    // CouchMethod.find로 대신 사용
     public Enumerable<Object> find(List<Map.Entry<String, Class>> fields,
         List<String> ops,
         List<Map.Entry<String, RelFieldCollation.Direction>> sort,

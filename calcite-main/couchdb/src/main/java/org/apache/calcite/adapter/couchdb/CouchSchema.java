@@ -58,6 +58,7 @@ public class CouchSchema extends AbstractSchema {
   protected final Map<String, Object> infoMap;
   protected final JSONParser jsonParser;
 
+  // model 파일에서 데이터를 불러와 CouchDbClient 생성
   public CouchSchema(Map<String, Object> infoMap, int port) {
     super();
     this.infoMap = infoMap;

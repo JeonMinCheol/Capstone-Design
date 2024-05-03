@@ -64,6 +64,7 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
     return super.computeSelfCost(planner, mq).multiplyBy(.1);
   }
 
+  // 현재 Relational Expression(EnumerableRel) 반환
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new CouchToEnumerableConverter(getCluster(), null, traitSet, sole(inputs));
@@ -82,26 +83,19 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
             pref.prefer(JavaRowFormat.ARRAY));
 
 
-    final Expression fields =
-        list.append("fields",
-            constantArrayList(
-                Pair.zip(CouchRules.couchFieldNames(rowType),
-                    new AbstractList<Class>() {
-                      @Override public Class get(int index) {
-                        return physType.fieldClass(index);
-                      }
-
-                      @Override public int size() {
-                        return rowType.getFieldCount();
-                      }
-                    }),
-                Pair.class));
-
+    final Expression fields = list.append("fields",
+        constantArrayList(Pair.zip(CouchRules.couchFieldNames(rowType), new AbstractList<Class>() {
+          @Override public Class get(int index) {
+            return physType.fieldClass(index);
+          }
+          @Override public int size() { return rowType.getFieldCount(); }
+    }), Pair.class));
     final Expression table = list.append("table", CouchImplementor.table.getExpression(CouchTable.CouchQueryable.class));
     final Expression sort = list.append("sort", Expressions.constant(CouchImplementor, Pair.class));
     final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.skip));
     final Expression ops = list.append("ops", Expressions.constant(CouchImplementor.list));
 
+    // find 메서드에 데이터 전달
     Expression enumerable =
         list.append("enumerable",
             Expressions.call(table,

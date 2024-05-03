@@ -42,13 +42,13 @@ public class CouchFilter extends Filter implements CouchRel {
     return super.computeSelfCost(planner, mq).multiplyBy(0.1);
   }
 
-
-
+  // Filter Rule 반환
   @Override
   public Filter copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
     return new CouchFilter(getCluster(), traitSet, input, condition);
   }
 
+  // TODO
   @Override
   public void implement(Implementor implementor) {
 

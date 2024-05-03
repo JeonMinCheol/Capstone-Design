@@ -38,12 +38,15 @@ public class CouchSchemaFactory implements SchemaFactory {
 
   private static final int DEFAULT_COUCHDB_PORT = 5984;
 
+  // CouchSchema 생성
   @Override
   public Schema create(SchemaPlus parentSchema, String name, Map<String, Object> operand) {
     Map<String, Object> info_map = getInfo(operand);
     return new CouchSchema(info_map, getPort(operand));
   }
 
+  // model 파일의 데이터로 map을 생성
+  // 스키마 생성 시 사용
   private Map<String, Object> getInfo(Map<String, Object> map) {
     Map<String, Object> ret = new HashMap<>();
 
@@ -61,6 +64,7 @@ public class CouchSchemaFactory implements SchemaFactory {
     return ret;
   }
 
+  // 포트를 int 형으로 변경
   private int getPort(Map<String, Object> map) {
     if (map.containsKey("port")) {
       Object port = map.get("port");

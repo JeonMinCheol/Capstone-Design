@@ -42,12 +42,16 @@ public class CouchProject extends Project implements CouchRel {
     assert getConvention() == input.getConvention();
   }
 
+  // Project Rule 반환
   @Override
   public Project copy(RelTraitSet traitSet, RelNode input, List<RexNode> projects, RelDataType rowType) {
     return new CouchProject(getCluster(), traitSet, input, projects, rowType);
   }
 
-  // TODO
+
+  // TODO : project에서 name은 field를 의미하는 듯
+  // rex translator를 통해 변환된 데이터를 여기서 판단해서 implementor에 집어넣음
+  // 이후 find 함수에서 implementor에 있는 데이터들을 가져다 최종적으로 쿼리로 변경
   @Override
   public void implement(Implementor implementor) {
     implementor.visitChild(0, getInput());

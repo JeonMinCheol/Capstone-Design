@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 public enum CouchMethod {
+  // CouchTable.find method
   COUCH_QUERYABLE_FIND(CouchTable.CouchQueryable.class,
       "find",
       List.class,

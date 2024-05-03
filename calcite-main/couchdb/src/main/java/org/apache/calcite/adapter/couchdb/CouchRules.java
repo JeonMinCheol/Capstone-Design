@@ -26,6 +26,7 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
@@ -49,8 +50,10 @@ public class CouchRules {
 
   protected static final Logger LOGGER = CalciteTrace.getPlannerTracer();
 
+  // CouchRule들의 목록
   public static final RelOptRule[] RULES = {
-      CouchProjectRule.INSTANCE
+      CouchProjectRule.INSTANCE,
+      CouchFilterRule.INSTANCE
   };
 
   static String isItem(RexCall call) {
@@ -110,6 +113,7 @@ public class CouchRules {
         ? s.substring(1, s.length() - 1) : s;
   }
 
+  // TODO : RexNode를 쿼리로 변환하는 메서드를 담는 클래스
   static class RexToCouchTranslator extends RexVisitorImpl<String> {
     private final JavaTypeFactory typeFactory;
     private final List<String> inFields;
@@ -142,6 +146,7 @@ public class CouchRules {
       this.inFields = inFields;
     }
 
+    // TODO : maogo query에 맞게 변경
     @Override
     public String visitLiteral(RexLiteral literal) {
       if (literal.getValue() == null) {
@@ -153,12 +158,14 @@ public class CouchRules {
           + "}";
     }
 
+    // TODO : maogo query에 맞게 변경
     @Override
     public String visitInputRef(RexInputRef inputRef) {
       return maybeQuote(
           "$" + inFields.get(inputRef.getIndex()));
     }
   }
+
   abstract static class CouchConverterRule extends ConverterRule {
     public CouchConverterRule(Config config) {
       super(config);
@@ -188,6 +195,30 @@ public class CouchRules {
       final RelTraitSet traitSet = project.getTraitSet().replace(out);
       return new CouchProject(project.getCluster(), traitSet, convert(project.getInput(), out),
           project.getProjects(), project.getRowType());
+    }
+  }
+
+  private static class CouchFilterRule extends CouchConverterRule {
+    static final CouchFilterRule INSTANCE = Config.INSTANCE
+        .withConversion(LogicalFilter.class, Convention.NONE,
+            CouchRel.CONVENTION, "CouchFilterRule")
+        .withRuleFactory(CouchFilterRule::new)
+        .toRule(CouchFilterRule.class);
+
+    public CouchFilterRule(Config config) {
+      super(config);
+    }
+
+    @Override
+    public @Nullable RelNode convert(RelNode rel) {
+      final LogicalFilter filter = (LogicalFilter) rel;
+      final RelTraitSet traitSet = filter.getTraitSet().replace(out);
+      return new CouchFilter(
+          rel.getCluster(),
+          traitSet,
+          convert(filter.getInput(), out),
+          filter.getCondition()
+      );
     }
   }
 }
