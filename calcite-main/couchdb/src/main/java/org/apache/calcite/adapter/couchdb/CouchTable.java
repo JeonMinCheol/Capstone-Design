@@ -40,8 +40,6 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -102,27 +100,23 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
    * Executes a "find" operation
    *
    * @param fields 프로젝션할 목록; or null to return map
-   * @param ops 실행할 operation 목록.
-   * @param sort list of fields to sort and their direction (asc/desc)
-   * @param skip 몇 번쨰 docs까지 skip하고 이후 결과를 출력할 지 결정
    * @return Enumerator of results
    */
   private Enumerable<Object> find(CouchDbClient dbClient,
-      List<Map.Entry<String, Class>> fields
-//      List<String> ops,
+      List<Map.Entry<String, Class>> fields,
+      String projectString
 //      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
 //      Long skip
   ) {
     String tableUri = dbClient.getDBUri().toString()+"/_find";
 
     // TODO : fields, ops, sort, skip등 query에 사용할 parameter를 받아와 query로 변환하는 코드
-
+    String query = projectString == null ?
+        "{ \"selector\" : {} }" : "{ \"selector\" : {}," + projectString + "}";
 
     // 생성된 query로 document 조회, Enumerator로 변환
-    try{
-      // sample 1
-      String query = "{ \"selector\" : {} }";
 
+    try{
       HttpPost req = new HttpPost(tableUri);
       HttpEntity body = new StringEntity(query);
       req.setEntity(body);
@@ -154,7 +148,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     @Override
     public Enumerator<T> enumerator() {
       final Enumerable<T> enumerable =
-          (Enumerable<T>) getTable().find(getClient(),null);
+          (Enumerable<T>) getTable().find(getClient(),null, null);
 
       return enumerable.enumerator();
     }
@@ -171,12 +165,12 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
 
     // TODO : 만들고 변경
     // CouchMethod.find로 대신 사용
-    public Enumerable<Object>find(List<Map.Entry<String, Class>> fields
-//        List<String> ops,
+    public Enumerable<Object>find(List<Map.Entry<String, Class>> fields,
+        String projectString
 //        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
 //        Long skip
     ) {
-      return getTable().find(getClient(), fields);
+      return getTable().find(getClient(), fields, projectString);
     }
   }
 }

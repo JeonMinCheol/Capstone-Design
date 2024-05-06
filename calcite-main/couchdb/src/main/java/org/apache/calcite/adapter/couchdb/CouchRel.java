@@ -35,7 +35,7 @@ public interface CouchRel extends RelNode {
 
   class Implementor {
     final List<String> list = new ArrayList<>();
-
+    String projectString;
     //Sorting clauses.
     final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
 

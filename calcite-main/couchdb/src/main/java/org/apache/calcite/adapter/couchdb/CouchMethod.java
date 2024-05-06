@@ -30,8 +30,8 @@ public enum CouchMethod {
   // TODO : 만들고 변경
   COUCH_QUERYABLE_FIND(CouchTable.CouchQueryable.class,
       "find",
-      List.class
-//      List.class,
+      List.class,
+      String.class
 //      List.class,
 //      Long.class
   );

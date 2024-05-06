@@ -44,8 +44,6 @@ public class CouchProject extends Project implements CouchRel {
   protected CouchProject(RelOptCluster cluster, RelTraitSet traits,
       RelNode input, List<? extends RexNode> projects, RelDataType rowType) {
     super(cluster, traits, ImmutableList.of(), input, projects, rowType, ImmutableSet.of());
-
-    System.out.println("CouchProject.CouchProject");
     assert getConvention() == CouchRel.CONVENTION;
     assert getConvention() == input.getConvention();
   }
@@ -110,6 +108,6 @@ public class CouchProject extends Project implements CouchRel {
 
     final String findString = String.join(", ", newList);
     query.append("\"fields\": [").append(findString).append("]");
-    implementor.add(String.valueOf(query));
+    implementor.projectString = query.toString();
   }
 }
