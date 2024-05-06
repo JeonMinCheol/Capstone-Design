@@ -23,12 +23,10 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.runtime.PairList;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public interface CouchRel extends RelNode {
   void implement(Implementor implementor);
@@ -37,21 +35,22 @@ public interface CouchRel extends RelNode {
 
   class Implementor {
     final List<String> list = new ArrayList<>();
+
+    //Sorting clauses.
     final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
-    int skip = 0;
-    final RexBuilder rexBuilder;
+
+    // Starting index
+    int skip;
     RelOptTable table;
     CouchTable couchTable;
 
-    public Implementor(RexBuilder rexBuilder) {
-      this.rexBuilder = rexBuilder;
-    }
-
+    // sort에 정렬 기준 추가
     void addSort(String field, RelFieldCollation.Direction direction) {
       Objects.requireNonNull(field, "field");
       sort.add(new Pair<>(field, direction));
     }
 
+    // list에 find에 사용할 Operation 추가
     public void add(String findOp) {list.add(findOp);}
 
     public void visitChild(int ordinal, RelNode input) {

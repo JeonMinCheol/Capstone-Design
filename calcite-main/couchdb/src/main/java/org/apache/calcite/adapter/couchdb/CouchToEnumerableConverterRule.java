@@ -38,6 +38,6 @@ public class CouchToEnumerableConverterRule extends ConverterRule {
   @Override
   public @Nullable RelNode convert(RelNode rel) {
     RelTraitSet newTraitSet = rel.getTraitSet().replace(getOutConvention());
-    return new CouchToEnumerableConverter(rel.getCluster(), null, newTraitSet, rel);
+    return new CouchToEnumerableConverter(rel.getCluster(), newTraitSet, rel);
   }
 }

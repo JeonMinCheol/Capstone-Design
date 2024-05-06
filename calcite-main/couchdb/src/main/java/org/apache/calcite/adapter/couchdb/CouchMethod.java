@@ -26,12 +26,14 @@ import java.util.List;
 
 public enum CouchMethod {
   // CouchTable.find method
+
+  // TODO : 만들고 변경
   COUCH_QUERYABLE_FIND(CouchTable.CouchQueryable.class,
       "find",
-      List.class,
-      List.class,
-      List.class,
-      Integer.class
+      List.class
+//      List.class,
+//      List.class,
+//      Long.class
   );
 
   public final Method method;

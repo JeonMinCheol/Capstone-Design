@@ -17,10 +17,15 @@
 
 package org.apache.calcite.adapter.couchdb;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.net.MediaType;
 import com.google.gson.JsonArray;
+
+import com.google.gson.JsonElement;
 
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.linq4j.*;
+import org.apache.calcite.linq4j.function.Function1;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -35,10 +40,13 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -87,7 +95,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
   @Override
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
     final RelOptCluster cluster = context.getCluster();
-    return new CouchTableScan(cluster, cluster.traitSet(), relOptTable, this, null);
+    return new CouchTableScan(cluster, cluster.traitSetOf(CouchRel.CONVENTION), relOptTable, this, null);
   }
 
   /**
@@ -99,37 +107,40 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
    * @param skip 몇 번쨰 docs까지 skip하고 이후 결과를 출력할 지 결정
    * @return Enumerator of results
    */
-  private Enumerable<Object> find(CouchDbClient dbClient, List<Map.Entry<String, Class>> fields,
-      List<String> ops,
-      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
-      Long skip) {
-
+  private Enumerable<Object> find(CouchDbClient dbClient,
+      List<Map.Entry<String, Class>> fields
+//      List<String> ops,
+//      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+//      Long skip
+  ) {
     String tableUri = dbClient.getDBUri().toString()+"/_find";
 
     // TODO : fields, ops, sort, skip등 query에 사용할 parameter를 받아와 query로 변환하는 코드
 
+
     // 생성된 query로 document 조회, Enumerator로 변환
     try{
-      String query = null;
+      // sample 1
+      String query = "{ \"selector\" : {} }";
 
       HttpPost req = new HttpPost(tableUri);
       HttpEntity body = new StringEntity(query);
       req.setEntity(body);
+      req.addHeader("Content-Type", "application/json");
 
       HttpEntity res = dbClient.executeRequest(req).getEntity();
 
       String finds  = EntityUtils.toString(res,"UTF-8");
-      JsonArray docs = (JsonArray) ((JSONObject) jsonParser.parse(finds)).get("docs");
 
+      JSONArray docs = (JSONArray) ((JSONObject) jsonParser.parse(finds)).get("docs");
       return new AbstractEnumerable<Object>() {
         @Override
         public Enumerator<Object> enumerator() {
-          return new CouchEnumerator(Collections.singletonList(docs));
+          return new CouchEnumerator(docs);
         }
       };
-
     } catch (IOException | ParseException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(e.getMessage());
     }
   }
 
@@ -143,7 +154,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     @Override
     public Enumerator<T> enumerator() {
       final Enumerable<T> enumerable =
-          (Enumerable<T>) getTable().find(getClient(),null, null, null, null);
+          (Enumerable<T>) getTable().find(getClient(),null);
 
       return enumerable.enumerator();
     }
@@ -158,12 +169,14 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       return Objects.requireNonNull(schema.unwrap(CouchSchema.class)).dbClient;
     }
 
+    // TODO : 만들고 변경
     // CouchMethod.find로 대신 사용
-    public Enumerable<Object> find(List<Map.Entry<String, Class>> fields,
-        List<String> ops,
-        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
-        Long skip) {
-      return getTable().find(getClient(), fields, ops, sort, skip);
+    public Enumerable<Object>find(List<Map.Entry<String, Class>> fields
+//        List<String> ops,
+//        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+//        Long skip
+    ) {
+      return getTable().find(getClient(), fields);
     }
   }
 }

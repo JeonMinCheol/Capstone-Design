@@ -39,9 +39,6 @@ public class CouchTableScan extends TableScan implements CouchRel{
     super(cluster, traitSet, ImmutableList.of(), table);
     this.couchTable = couchTable;
     this.projectRowType = projectRowType;
-
-    assert couchTable != null;
-    assert getConvention() == CouchRel.CONVENTION;
   }
 
   // Relational Expression (RelNode)를 반환

@@ -30,8 +30,10 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.trace.CalciteLogger;
 
@@ -56,12 +58,26 @@ public class CouchRules {
       CouchFilterRule.INSTANCE
   };
 
-  static String isItem(RexCall call) {
+  /**
+   * Returns 'string' if it is a call to item['string'], null otherwise.
+   *
+   * @param call current relational expression
+   * @return literal value
+   */
+  public static String isItemCall(RexCall call) {
+
+    // item = For example, myArray[3], "myMap['foo']", myStruct[2] or myStruct['fieldName']
     if (call.getOperator() != SqlStdOperatorTable.ITEM) {
       return null;
     }
-    final RexNode op0 = call.operands.get(0);
-    final RexNode op1 = call.operands.get(1);
+    final RexNode op0 = call.getOperands().get(0); // operands : 피연산자
+    final RexNode op1 = call.getOperands().get(1);
+
+    //         RexCall(=)           : operator
+    //         /       \
+    //        /         \
+    // InputRef($1) Literal("John") : operands
+
     if (op0 instanceof RexInputRef
         && ((RexInputRef) op0).getIndex() == 0
         && op1 instanceof RexLiteral
@@ -69,6 +85,34 @@ public class CouchRules {
       return (String) ((RexLiteral) op1).getValue2();
     }
     return null;
+  }
+
+  /**
+   * Checks if current node represents item access as in {@code _MAP['foo']} or
+   * {@code cast(_MAP['foo'] as integer)}.
+   *
+   * @return whether expression is item
+   */
+  static boolean isItem(RexNode node) {
+    final Boolean result = node.accept(new RexVisitorImpl<Boolean>(false) {
+      @Override public Boolean visitCall(final RexCall call) {
+        return isItemCall(uncast(call)) != null;
+      }
+    });
+
+    return Boolean.TRUE.equals(result);
+  }
+
+  /**
+   * Unwraps cast expressions from current call. {@code cast(cast(expr))} becomes {@code expr}.
+   */
+  private static RexCall uncast(RexCall maybeCast) {
+    if (maybeCast.getKind() == SqlKind.CAST && maybeCast.getOperands().get(0) instanceof RexCall) {
+      return uncast((RexCall) maybeCast.getOperands().get(0));
+    }
+
+    // not a cast
+    return maybeCast;
   }
 
   static List<String> couchFieldNames(final RelDataType rowType) {
@@ -146,23 +190,45 @@ public class CouchRules {
       this.inFields = inFields;
     }
 
-    // TODO : maogo query에 맞게 변경
+    // literal 방문 시 literal: 마킹해서 Rule에서 확인 후 변환
     @Override
     public String visitLiteral(RexLiteral literal) {
       if (literal.getValue() == null) {
         return "null";
       }
-      return "{"
-          + RexToLixTranslator.translateLiteral(literal, literal.getType(),
-          typeFactory, RexImpTable.NullAs.NOT_POSSIBLE)
-          + "}";
+      return RexToLixTranslator.translateLiteral(literal,
+          literal.getType(), typeFactory, RexImpTable.NullAs.NOT_POSSIBLE).toString();
     }
 
-    // TODO : maogo query에 맞게 변경
+    // inputRef 방문 시 $index로 변환
     @Override
     public String visitInputRef(RexInputRef inputRef) {
       return maybeQuote(
           "$" + inFields.get(inputRef.getIndex()));
+    }
+
+    // TODO : 바꾸기
+    @Override
+    public String visitCall(RexCall call) {
+      final String name = isItemCall(call);
+      if (name != null) {
+        return name;
+      }
+
+      final List<String> strings = visitList(call.operands);
+
+      if (call.getKind() == SqlKind.CAST) {
+        return call.getOperands().get(0).accept(this);
+      }
+
+      if (call.getOperator() == SqlStdOperatorTable.ITEM) {
+        final RexNode op1 = call.getOperands().get(1);
+        if (op1 instanceof RexLiteral && op1.getType().getSqlTypeName() == SqlTypeName.INTEGER) {
+          return stripQuotes(strings.get(0)) + "[" + ((RexLiteral) op1).getValue2() + "]";
+        }
+      }
+      throw new IllegalArgumentException("Translation of " + call
+          + " is not supported by CouchhProject");
     }
   }
 
@@ -179,7 +245,7 @@ public class CouchRules {
         .withRuleFactory(CouchProjectRule::new)
         .toRule(CouchProjectRule.class);
 
-    public CouchProjectRule(Config config) {
+    protected CouchProjectRule(Config config) {
       super(config);
     }
 
@@ -191,10 +257,11 @@ public class CouchRules {
 
     @Override
     public @Nullable RelNode convert(RelNode rel) {
+      System.out.println("CouchProjectRule.convert");
       final LogicalProject project = (LogicalProject) rel;
       final RelTraitSet traitSet = project.getTraitSet().replace(out);
-      return new CouchProject(project.getCluster(), traitSet, convert(project.getInput(), out),
-          project.getProjects(), project.getRowType());
+      return new CouchProject(project.getCluster(), traitSet,
+          convert(project.getInput(), out), project.getProjects(), project.getRowType());
     }
   }
 

@@ -47,13 +47,11 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
    * Creates a ConverterImpl.
    *
    * @param cluster  planner's cluster
-   * @param traitDef the RelTraitDef this converter converts
    * @param traits   the output traits of this converter
    * @param child    child rel (provides input traits)
    */
   protected CouchToEnumerableConverter(
       RelOptCluster cluster,
-      @Nullable RelTraitDef traitDef,
       RelTraitSet traits,
       RelNode child) {
     super(cluster, ConventionTraitDef.INSTANCE, traits, child);
@@ -67,21 +65,20 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
   // 현재 Relational Expression(EnumerableRel) 반환
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new CouchToEnumerableConverter(getCluster(), null, traitSet, sole(inputs));
+    return new CouchToEnumerableConverter(getCluster(), traitSet, sole(inputs));
   }
 
   // query에 필요한 정보들을 전달
   @Override
   public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
     final BlockBuilder list = new BlockBuilder();
-    final CouchRel.Implementor CouchImplementor = new CouchRel.Implementor(getCluster().getRexBuilder());
+    final CouchRel.Implementor CouchImplementor = new CouchRel.Implementor();
     CouchImplementor.visitChild(0, getInput());
     final RelDataType rowType = getRowType();
     final PhysType physType =
         PhysTypeImpl.of(
             implementor.getTypeFactory(), rowType,
             pref.prefer(JavaRowFormat.ARRAY));
-
 
     final Expression fields = list.append("fields",
         constantArrayList(Pair.zip(CouchRules.couchFieldNames(rowType), new AbstractList<Class>() {
@@ -91,15 +88,18 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
           @Override public int size() { return rowType.getFieldCount(); }
     }), Pair.class));
     final Expression table = list.append("table", CouchImplementor.table.getExpression(CouchTable.CouchQueryable.class));
-    final Expression sort = list.append("sort", Expressions.constant(CouchImplementor, Pair.class));
+
+    // TODO : 만들고 추가
+    final Expression sort = list.append("sort", Expressions.constant(CouchImplementor));
     final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.skip));
     final Expression ops = list.append("ops", Expressions.constant(CouchImplementor.list));
 
+    // TODO : 만들고 추가
     // find 메서드에 데이터 전달
     Expression enumerable =
         list.append("enumerable",
             Expressions.call(table,
-                CouchMethod.COUCH_QUERYABLE_FIND.method, fields, ops, sort, skip));
+                CouchMethod.COUCH_QUERYABLE_FIND.method, fields));
 
     list.add(Expressions.return_(null, enumerable));
     return implementor.result(physType, list.toBlock());
