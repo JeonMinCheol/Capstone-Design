@@ -257,7 +257,6 @@ public class CouchRules {
 
     @Override
     public @Nullable RelNode convert(RelNode rel) {
-      System.out.println("CouchProjectRule.convert");
       final LogicalProject project = (LogicalProject) rel;
       final RelTraitSet traitSet = project.getTraitSet().replace(out);
       return new CouchProject(project.getCluster(), traitSet,

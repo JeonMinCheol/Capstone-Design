@@ -111,7 +111,9 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     String tableUri = dbClient.getDBUri().toString()+"/_find";
 
     // TODO : fields, ops, sort, skip등 query에 사용할 parameter를 받아와 query로 변환하는 코드
-    String query = projectString == null ?
+    boolean selectAll = (projectString == null);
+
+    String query = selectAll ?
         "{ \"selector\" : {} }" : "{ \"selector\" : {}," + projectString + "}";
 
     // 생성된 query로 document 조회, Enumerator로 변환
@@ -144,6 +146,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       super(queryProvider, schema, couchTable, tableName);
     }
 
+    // TODO : RULE 추가 후 변경
     // 현재 테이블의 enumerator를 반환
     @Override
     public Enumerator<T> enumerator() {

@@ -88,7 +88,6 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
           @Override public int size() { return rowType.getFieldCount(); }
     }), Pair.class));
     final Expression table = list.append("table", CouchImplementor.table.getExpression(CouchTable.CouchQueryable.class));
-
     // TODO : 만들고 추가
     final Expression sort = list.append("sort", Expressions.constant(CouchImplementor));
     final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.skip));

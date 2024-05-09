@@ -39,6 +39,11 @@ public interface CouchRel extends RelNode {
     //Sorting clauses.
     final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
 
+    /**
+     * EXPR$0과 item간 mapping
+     */
+    static Map<String, String> expressionItemMap = new LinkedHashMap<>();
+
     // Starting index
     int skip;
     RelOptTable table;
@@ -57,5 +62,8 @@ public interface CouchRel extends RelNode {
       assert ordinal == 0;
       ((CouchRel) input).implement(this);
     }
+
+    public static void addExpressionItemMapping(String name, String expr) { expressionItemMap.put(name, expr); }
+    public static Map<String, String> getExpressionItemMapping() { return expressionItemMap; }
   }
 }

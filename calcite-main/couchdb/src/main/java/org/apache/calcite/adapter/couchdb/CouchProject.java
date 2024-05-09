@@ -38,7 +38,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CouchProject extends Project implements CouchRel {
   protected CouchProject(RelOptCluster cluster, RelTraitSet traits,
@@ -91,6 +90,7 @@ public class CouchProject extends Project implements CouchRel {
 
       // ex) _MAP['_id']
       if (CouchRules.isItem(pair.left)) {
+        implementor.addExpressionItemMapping(name, expr);
         fields.add(CouchRules.quote(expr));
       } else if (expr.equals(name)) {
         fields.add(name);
