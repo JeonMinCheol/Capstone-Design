@@ -129,10 +129,12 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       String finds  = EntityUtils.toString(res,"UTF-8");
 
       JSONArray docs = (JSONArray) ((JSONObject) jsonParser.parse(finds)).get("docs");
+      final Function1<JSONObject, Object> getter = CouchEnumerator.getter(fields);
+
       return new AbstractEnumerable<Object>() {
         @Override
         public Enumerator<Object> enumerator() {
-          return new CouchEnumerator(docs);
+          return new CouchEnumerator(docs, getter, selectAll);
         }
       };
     } catch (IOException | ParseException e) {
