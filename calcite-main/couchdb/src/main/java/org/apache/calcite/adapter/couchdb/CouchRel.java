@@ -34,10 +34,15 @@ public interface CouchRel extends RelNode {
   Convention CONVENTION = new Convention.Impl("COUCH", CouchRel.class);
 
   class Implementor {
-    final List<String> list = new ArrayList<>();
-    String projectString;
-    //Sorting clauses.
+    public Implementor(RexBuilder rexBuilder) {
+      this.rexBuilder = rexBuilder;
+    }
+
+    private RexBuilder rexBuilder;
+    private String filterString;
+    private String projectString;
     final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
+    //Sorting clauses.
 
     /**
      * EXPR$0과 item간 mapping
@@ -49,21 +54,23 @@ public interface CouchRel extends RelNode {
     RelOptTable table;
     CouchTable couchTable;
 
+    // ~~~~~~ Method ~~~~~~
     // sort에 정렬 기준 추가
     void addSort(String field, RelFieldCollation.Direction direction) {
       Objects.requireNonNull(field, "field");
       sort.add(new Pair<>(field, direction));
     }
-
     // list에 find에 사용할 Operation 추가
-    public void add(String findOp) {list.add(findOp);}
-
     public void visitChild(int ordinal, RelNode input) {
       assert ordinal == 0;
       ((CouchRel) input).implement(this);
     }
-
     public static void addExpressionItemMapping(String name, String expr) { expressionItemMap.put(name, expr); }
     public static Map<String, String> getExpressionItemMapping() { return expressionItemMap; }
+    public String getProjectString() { return projectString; }
+    public void setProjectString(String projectString) { this.projectString = projectString; }
+    public RexBuilder getRexBuilder() { return rexBuilder; }
+    public void setFilterString(String filterString) {this.filterString = filterString;}
+    public String getFilterString() { return filterString; }
   }
 }

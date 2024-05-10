@@ -96,27 +96,37 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     return new CouchTableScan(cluster, cluster.traitSetOf(CouchRel.CONVENTION), relOptTable, this, null);
   }
 
+  private String makeQuery(String projectString, String filterString, String sortString){
+    String filter = (filterString == null) ? "\"selector\" : {}" : "\"selector\" : " + filterString;
+    String project = (projectString == null) ? "" : ", " + projectString;
+    String sort = (sortString == null) ? "" : ", " + sortString;;
+
+    StringBuilder builder = new StringBuilder();
+    builder.append("{");
+    builder.append(filter);
+    builder.append(project);
+    builder.append(sort);
+    builder.append("}");
+
+    return builder.toString();
+  }
+
   /**
    * Executes a "find" operation
    *
    * @param fields 프로젝션할 목록; or null to return map
    * @return Enumerator of results
    */
-  private Enumerable<Object> find(CouchDbClient dbClient,
+  private Enumerable<Object> find(
+      CouchDbClient dbClient,
       List<Map.Entry<String, Class>> fields,
-      String projectString
+      String projectString,  // {fields " []}
+      String filterString    // {selector : {}}
 //      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
 //      Long skip
   ) {
     String tableUri = dbClient.getDBUri().toString()+"/_find";
-
-    // TODO : fields, ops, sort, skip등 query에 사용할 parameter를 받아와 query로 변환하는 코드
-    boolean selectAll = (projectString == null);
-
-    String query = selectAll ?
-        "{ \"selector\" : {} }" : "{ \"selector\" : {}," + projectString + "}";
-
-    // 생성된 query로 document 조회, Enumerator로 변환
+    String query =  makeQuery(projectString, filterString, null);
 
     try{
       HttpPost req = new HttpPost(tableUri);
@@ -134,7 +144,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       return new AbstractEnumerable<Object>() {
         @Override
         public Enumerator<Object> enumerator() {
-          return new CouchEnumerator(docs, getter, selectAll);
+          return new CouchEnumerator(docs, getter, projectString == null);
         }
       };
     } catch (IOException | ParseException e) {
@@ -153,7 +163,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     @Override
     public Enumerator<T> enumerator() {
       final Enumerable<T> enumerable =
-          (Enumerable<T>) getTable().find(getClient(),null, null);
+          (Enumerable<T>) getTable().find(getClient(),null, null, null);
 
       return enumerable.enumerator();
     }
@@ -168,14 +178,16 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       return Objects.requireNonNull(schema.unwrap(CouchSchema.class)).dbClient;
     }
 
-    // TODO : 만들고 변경
+    // TODO : RULE 추가 후 변경
     // CouchMethod.find로 대신 사용
-    public Enumerable<Object>find(List<Map.Entry<String, Class>> fields,
-        String projectString
+    public Enumerable<Object>find(
+        List<Map.Entry<String, Class>> fields, //EXPR$0, Object
+        String projectString,
+        String filterString
 //        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
 //        Long skip
     ) {
-      return getTable().find(getClient(), fields, projectString);
+      return getTable().find(getClient(), fields, projectString, filterString);
     }
   }
 }

@@ -31,8 +31,8 @@ public enum CouchMethod {
   COUCH_QUERYABLE_FIND(CouchTable.CouchQueryable.class,
       "find",
       List.class,
+      String.class,
       String.class
-//      List.class,
 //      Long.class
   );
 

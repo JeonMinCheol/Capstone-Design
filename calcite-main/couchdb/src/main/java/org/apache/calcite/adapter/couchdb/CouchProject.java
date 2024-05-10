@@ -106,8 +106,11 @@ public class CouchProject extends Project implements CouchRel {
     final StringBuilder query = new StringBuilder();
     List<String> newList = new ArrayList<>(fields);
 
-    final String findString = String.join(", ", newList);
-    query.append("\"fields\": [").append(findString).append("]");
-    implementor.projectString = query.toString();
+    // select * ~
+    if (!newList.isEmpty()) {
+      final String findString = String.join(", ", newList);
+      query.append("\"fields\": [").append(findString).append("]");
+      implementor.setProjectString(query.toString());
+    }
   }
 }

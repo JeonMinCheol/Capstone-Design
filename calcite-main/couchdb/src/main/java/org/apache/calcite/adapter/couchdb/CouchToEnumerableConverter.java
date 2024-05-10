@@ -72,7 +72,7 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
   @Override
   public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
     final BlockBuilder list = new BlockBuilder();
-    final CouchRel.Implementor CouchImplementor = new CouchRel.Implementor();
+    final CouchRel.Implementor CouchImplementor = new CouchRel.Implementor(getCluster().getRexBuilder());
     CouchImplementor.visitChild(0, getInput());
     final RelDataType rowType = getRowType();
     final PhysType physType =
@@ -89,16 +89,17 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
     }), Pair.class));
     final Expression table = list.append("table", CouchImplementor.table.getExpression(CouchTable.CouchQueryable.class));
     // TODO : 만들고 추가
+    final Expression projectString = Expressions.constant(CouchImplementor.getProjectString());
+    final Expression filterString = Expressions.constant(CouchImplementor.getFilterString());
     final Expression sort = list.append("sort", Expressions.constant(CouchImplementor));
     final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.skip));
-    final Expression projectString = Expressions.constant(CouchImplementor.projectString);
 
     // TODO : 만들고 추가
     // find 메서드에 데이터 전달
     Expression enumerable =
         list.append("enumerable",
             Expressions.call(table,
-                CouchMethod.COUCH_QUERYABLE_FIND.method, fields, projectString));
+                CouchMethod.COUCH_QUERYABLE_FIND.method, fields, projectString, filterString));
 
     list.add(Expressions.return_(null, enumerable));
     return implementor.result(physType, list.toBlock());

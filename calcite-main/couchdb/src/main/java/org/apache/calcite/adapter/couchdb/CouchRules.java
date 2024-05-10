@@ -157,6 +157,22 @@ public class CouchRules {
         ? s.substring(1, s.length() - 1) : s;
   }
 
+  public static String isItem2(RexCall call) {
+    if (call.getOperator() != SqlStdOperatorTable.ITEM) return null;
+
+    final RexNode op0 = call.operands.get(0);
+    final RexNode op1 = call.operands.get(1);
+
+    if (op0 instanceof RexInputRef
+        && ((RexInputRef) op0).getIndex() == 0
+        && op1 instanceof RexLiteral
+        && ((RexLiteral) op1).getValue2() instanceof String) {
+      return (String) ((RexLiteral) op1).getValue2();
+    }
+
+    return null;
+  }
+
   // TODO : RexNode를 쿼리로 변환하는 메서드를 담는 클래스
   static class RexToCouchTranslator extends RexVisitorImpl<String> {
     private final JavaTypeFactory typeFactory;
