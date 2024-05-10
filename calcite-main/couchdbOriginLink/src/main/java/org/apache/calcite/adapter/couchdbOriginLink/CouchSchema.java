@@ -77,7 +77,7 @@ public class CouchSchema extends AbstractSchema {
         JSONObject parse = (JSONObject) rows.get(i);
         String documentId = (String) parse.get("id");
 
-        builder.put(documentId, new CouchTable(this, null, jsonParser, documentId));
+        builder.put(documentId, new CouchTable(this, jsonParser, documentId));
       }
     } catch (IOException | ParseException e) {
         throw new RuntimeException(e);
