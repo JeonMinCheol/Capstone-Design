@@ -41,7 +41,7 @@ public interface CouchRel extends RelNode {
     private RexBuilder rexBuilder;
     private String filterString;
     private String projectString;
-    final List<Map.Entry<String, RelFieldCollation.Direction>> sort = new ArrayList<>();
+    private String sort;
     //Sorting clauses.
 
     /**
@@ -50,16 +50,10 @@ public interface CouchRel extends RelNode {
     static Map<String, String> expressionItemMap = new LinkedHashMap<>();
 
     // Starting index
-    int skip;
+    private int skip = 0;
     RelOptTable table;
     CouchTable couchTable;
 
-    // ~~~~~~ Method ~~~~~~
-    // sort에 정렬 기준 추가
-    void addSort(String field, RelFieldCollation.Direction direction) {
-      Objects.requireNonNull(field, "field");
-      sort.add(new Pair<>(field, direction));
-    }
     // list에 find에 사용할 Operation 추가
     public void visitChild(int ordinal, RelNode input) {
       assert ordinal == 0;
@@ -72,5 +66,9 @@ public interface CouchRel extends RelNode {
     public RexBuilder getRexBuilder() { return rexBuilder; }
     public void setFilterString(String filterString) {this.filterString = filterString;}
     public String getFilterString() { return filterString; }
+    public String getSortString() { return sort;}
+    public void setSortString(String sort) { this.sort = sort; }
+    public int getSkip() { return skip; }
+    public void setSkip(int skip) { this.skip = skip; }
   }
 }

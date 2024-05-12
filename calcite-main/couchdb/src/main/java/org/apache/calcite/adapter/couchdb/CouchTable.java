@@ -121,12 +121,12 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       CouchDbClient dbClient,
       List<Map.Entry<String, Class>> fields,
       String projectString,  // {fields " []}
-      String filterString    // {selector : {}}
-//      List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+      String filterString,   // {selector : {}}
+      String sortString
 //      Long skip
   ) {
     String tableUri = dbClient.getDBUri().toString()+"/_find";
-    String query =  makeQuery(projectString, filterString, null);
+    String query =  makeQuery(projectString, filterString, sortString);
 
     try{
       HttpPost req = new HttpPost(tableUri);
@@ -163,7 +163,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     @Override
     public Enumerator<T> enumerator() {
       final Enumerable<T> enumerable =
-          (Enumerable<T>) getTable().find(getClient(),null, null, null);
+          (Enumerable<T>) getTable().find(getClient(),null, null, null, null);
 
       return enumerable.enumerator();
     }
@@ -183,11 +183,11 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     public Enumerable<Object>find(
         List<Map.Entry<String, Class>> fields, //EXPR$0, Object
         String projectString,
-        String filterString
-//        List<Map.Entry<String, RelFieldCollation.Direction>> sort,
+        String filterString,
+        String sortString
 //        Long skip
     ) {
-      return getTable().find(getClient(), fields, projectString, filterString);
+      return getTable().find(getClient(), fields, projectString, filterString, sortString);
     }
   }
 }

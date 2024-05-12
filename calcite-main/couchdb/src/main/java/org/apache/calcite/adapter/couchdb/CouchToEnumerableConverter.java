@@ -91,15 +91,15 @@ public class CouchToEnumerableConverter extends ConverterImpl implements Enumera
     // TODO : 만들고 추가
     final Expression projectString = Expressions.constant(CouchImplementor.getProjectString());
     final Expression filterString = Expressions.constant(CouchImplementor.getFilterString());
-    final Expression sort = list.append("sort", Expressions.constant(CouchImplementor));
-    final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.skip));
+    final Expression sortString = list.append("sort", Expressions.constant(CouchImplementor.getSortString()));
+    final Expression skip = list.append("skip", Expressions.constant(CouchImplementor.getSkip()));
 
     // TODO : 만들고 추가
     // find 메서드에 데이터 전달
     Expression enumerable =
         list.append("enumerable",
             Expressions.call(table,
-                CouchMethod.COUCH_QUERYABLE_FIND.method, fields, projectString, filterString));
+                CouchMethod.COUCH_QUERYABLE_FIND.method, fields, projectString, filterString, sortString));
 
     list.add(Expressions.return_(null, enumerable));
     return implementor.result(physType, list.toBlock());

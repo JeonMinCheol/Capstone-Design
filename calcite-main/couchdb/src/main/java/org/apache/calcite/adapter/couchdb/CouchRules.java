@@ -24,8 +24,10 @@ import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.type.RelDataType;
@@ -35,7 +37,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
-import org.apache.calcite.util.trace.CalciteLogger;
 
 import org.apache.calcite.util.trace.CalciteTrace;
 
@@ -55,7 +56,8 @@ public class CouchRules {
   // CouchRule들의 목록
   public static final RelOptRule[] RULES = {
       CouchProjectRule.INSTANCE,
-      CouchFilterRule.INSTANCE
+      CouchFilterRule.INSTANCE,
+      CouchSortRule.INSTANCE,
   };
 
   /**
@@ -301,6 +303,28 @@ public class CouchRules {
           convert(filter.getInput(), out),
           filter.getCondition()
       );
+    }
+  }
+
+  private static class CouchSortRule extends CouchConverterRule {
+    static final CouchSortRule INSTANCE = ConverterRule.Config.INSTANCE
+        .withConversion(Sort.class, Convention.NONE, CouchRel.CONVENTION,
+            "CouchSortRule")
+        .withRuleFactory(CouchSortRule::new)
+        .toRule(CouchSortRule.class);
+
+    CouchSortRule(ConverterRule.Config config) {
+      super(config);
+    }
+
+    @Override public RelNode convert(RelNode rel) {
+      final Sort sort = (Sort) rel;
+      final RelTraitSet traitSet =
+          sort.getTraitSet().replace(out)
+              .replace(sort.getCollation());
+      return new CouchSort(rel.getCluster(), traitSet,
+          convert(sort.getInput(), traitSet.replace(RelCollations.EMPTY)),
+          sort.getCollation(), sort.offset, sort.fetch);
     }
   }
 }

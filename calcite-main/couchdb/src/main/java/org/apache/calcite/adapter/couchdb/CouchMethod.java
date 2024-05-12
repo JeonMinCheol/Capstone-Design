@@ -32,6 +32,7 @@ public enum CouchMethod {
       "find",
       List.class,
       String.class,
+      String.class,
       String.class
 //      Long.class
   );
