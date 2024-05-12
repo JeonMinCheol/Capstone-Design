@@ -196,7 +196,7 @@ public class CouchRules {
       COUCH_OPERATORS.put(SqlStdOperatorTable.LESS_THAN, "$lt");
       COUCH_OPERATORS.put(SqlStdOperatorTable.LESS_THAN_OR_EQUAL, "$lte");
       COUCH_OPERATORS.put(SqlStdOperatorTable.IN, "$in");
-      COUCH_OPERATORS.put(SqlStdOperatorTable.ALL_EQ, "$all");
+      COUCH_OPERATORS.put(SqlStdOperatorTable.LIKE, "$regex");
     }
 
     protected RexToCouchTranslator(JavaTypeFactory typeFactory,

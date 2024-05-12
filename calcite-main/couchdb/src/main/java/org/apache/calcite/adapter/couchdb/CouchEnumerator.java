@@ -41,9 +41,13 @@ public class CouchEnumerator implements Enumerator<Object> {
   @Override
   public boolean moveNext() {
     try {
-      if(selectAll && index < json.size()){
-        current = json.get(index++);
-        return true;
+      if(selectAll){
+        if (index < json.size()){
+          current = json.get(index++);
+          return true;
+        }
+
+        return false;
       }
       else if (cursor.hasNext()) {
         JSONObject map = cursor.next();
@@ -70,7 +74,6 @@ public class CouchEnumerator implements Enumerator<Object> {
   final boolean isSelectAll(String name) {
     return "_MAP".equals(name);
   }
-
 
   /** Returns a function that projects a single field. */
   static Function1<JSONObject, Object> singletonGetter(final String fieldName,

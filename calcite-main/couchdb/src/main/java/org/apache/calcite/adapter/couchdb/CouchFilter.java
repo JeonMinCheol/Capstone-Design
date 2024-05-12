@@ -155,6 +155,20 @@ public class CouchFilter extends Filter implements CouchRel {
       return literal.getValue2();
     }
 
+    private Void translateLike(RexCall call) {
+
+      final RexNode left = call.operands.get(0);
+      final RexNode right = call.operands.get(1);
+
+      boolean b = translateLike2(left ,right);
+
+      if (b) {
+        return null;
+      }
+
+      throw new AssertionError("cannot translate op call" + call);
+    }
+
     private Void translateMatch2(RexNode node) {
       switch (node.getKind()) {
       case EQUALS:
@@ -169,6 +183,8 @@ public class CouchFilter extends Filter implements CouchRel {
         return translateBinary("$gt", "$lt", (RexCall) node);
       case GREATER_THAN_OR_EQUAL:
         return translateBinary("$gte", "$lte", (RexCall) node);
+      case LIKE:
+        return translateLike((RexCall) node);
       default:
         throw new AssertionError("cannot translate " + node);
       }
@@ -228,6 +244,49 @@ public class CouchFilter extends Filter implements CouchRel {
         // which may later be combined with other conditions:
         // E.g. {deptno: [$lt: 100, $gt: 50]}
         multimap.put(name, Pair.of(op, right));
+      }
+    }
+
+    private boolean translateLike2(RexNode left, RexNode right) {
+      switch (right.getKind()) {
+      case LITERAL:
+        break;
+      default:
+        return false;
+      }
+
+      final RexLiteral rightLiteral = (RexLiteral) right;
+
+      String likePattern = rightLiteral.getValue2().toString();
+      System.out.println(likePattern);
+
+      String regexPatternString = likePattern.replace("*", "");
+      if(regexPatternString.charAt(0) == '%' && regexPatternString.charAt(regexPatternString.length()-1) == '%') {
+        regexPatternString = regexPatternString.substring(1, regexPatternString.length()-1);
+      } else if (regexPatternString.charAt(0) == '%') {
+        regexPatternString = regexPatternString.substring(1) + "$";
+      } else if (regexPatternString.charAt(regexPatternString.length()-1) == '%') {
+        regexPatternString = "^" + regexPatternString.substring(0, regexPatternString.length()-1);
+      }
+
+      RexLiteral regexPattern = rexBuilder.makeLiteral(regexPatternString);
+
+      switch (left.getKind()) {
+      case INPUT_REF:
+        final RexInputRef left1 = (RexInputRef) left;
+        String name = fieldNames.get(left1.getIndex());
+        translateOp2("$regex", name, regexPattern);
+        return true;
+      case CAST:
+        return translateLike2(((RexCall) left).operands.get(0), right);
+      case ITEM:
+        String itemName = CouchRules.isItem2((RexCall) left);
+        if (itemName != null) {
+          translateOp2("$regex", itemName, regexPattern);
+          return true;
+        }
+      default:
+        return false;
       }
     }
   }
