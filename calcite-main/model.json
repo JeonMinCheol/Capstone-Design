@@ -12,8 +12,13 @@
         "password": "my0504",
         "protocol": "http",
         "port": "5984",
-        "database": "wiki"
+        "database": "grade"
       }
     }
   ]
 }
+// 쿼리 예시
+// SELECT _MAP['student_id'], _MAP['class_id'], _MAP['student_id'] FROM "test"."grade" WHERE _MAP['class_id'] = 189 ORDER BY _MAP['student_id'] DESC;
+// SELECT _MAP['student_id'], _MAP['class_id'], _MAP['student_id'] FROM "test"."grade" WHERE _MAP['class_id'] = 189;
+// SELECT * FROM "test"."grade" WHERE _MAP['class_id'] = 189;
+// SELECT count(*) FROM "test"."grade" WHERE _MAP['class_id'] = 189;

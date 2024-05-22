@@ -106,6 +106,7 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
     builder.append(filter);
     builder.append(project);
     builder.append(sort);
+    builder.append(",\"limit\": 10000"); // default = 25
     builder.append("}");
 
     return builder.toString();
@@ -158,7 +159,6 @@ public class CouchTable extends AbstractQueryableTable implements TranslatableTa
       super(queryProvider, schema, couchTable, tableName);
     }
 
-    // TODO : RULE 추가 후 변경
     // 현재 테이블의 enumerator를 반환
     @Override
     public Enumerator<T> enumerator() {
