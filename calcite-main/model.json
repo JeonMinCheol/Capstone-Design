@@ -4,15 +4,132 @@
   "schemas": [
     {
       "type": "custom",
-      "name" : "test",
-      "factory": "org.apache.calcite.adapter.couchdb.CouchSchemaFactory",
+      "name" : "routes_100",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
       "operand": {
         "host": "localhost",
         "username": "admin",
-        "password": "my0504",
+        "password": "password",
         "protocol": "http",
         "port": "5984",
-        "database": "wiki"
+        "database": "routes_100"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "routes_500",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "routes_500"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "routes_1000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "routes_1000"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "routes_2000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "routes_2000"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "routes_5000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "routes_5000"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "weather_100",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "weather_100"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "weather_500",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "weather_500"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "weather_1000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "weather_1000"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "weather_2000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "weather_2000"
+      }
+    },
+    {
+      "type": "custom",
+      "name" : "weather_5000",
+      "factory": "org.apache.calcite.adapter.couchdbOriginLink.CouchSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "username": "admin",
+        "password": "password",
+        "protocol": "http",
+        "port": "5984",
+        "database": "weather_5000"
       }
     }
   ]

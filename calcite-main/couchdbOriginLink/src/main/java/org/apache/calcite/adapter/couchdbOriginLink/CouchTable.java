@@ -74,7 +74,7 @@ public class CouchTable extends AbstractTable implements ScannableTable {
   // table(document)내의 row를 가져옴
   private Enumerable<Object[]> find() {
     String tableUri = schema.getDbClient().getDBUri().toString() + "/_find";
-    String query = "{ \"selector\" : {} }";
+    String query = "{ \"selector\" : {}, \"limit\" : 100000 }";
 
     List<Object> values = new ArrayList<>();
 
