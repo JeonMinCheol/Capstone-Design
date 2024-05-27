@@ -19,15 +19,15 @@ package org.apache.calcite.adapter.couchdbOriginLink;
 
 import org.apache.calcite.linq4j.Enumerator;
 
-import java.util.List;
+import org.json.simple.JSONArray;
 
 public class CouchEnumerator implements Enumerator<Object[]> {
-  private final List<Object> rows;
+  private final JSONArray json;
   private Object[] current;
   private int index = 0;
 
-  public CouchEnumerator(List<Object> rows) {
-    this.rows = rows;
+  public CouchEnumerator(JSONArray json) {
+    this.json = json;
   }
 
   @Override
@@ -40,8 +40,8 @@ public class CouchEnumerator implements Enumerator<Object[]> {
     current = null;
     Object[] o = new Object[1];
 
-    if(index < rows.size()) {
-      o[0] = rows.get(index);
+    if(index < json.size()) {
+      o[0] = json.get(index);
       current = o;
       index++;
     } else {
